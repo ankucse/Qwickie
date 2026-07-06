@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Order_Tracking_History")
+/**
+ * @author Ankit Sinha
+ */
 public class OrderTrackingHistory {
     
     @Id

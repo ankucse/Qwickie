@@ -1,5 +1,8 @@
 package com.qwickie.dto;
 
+/**
+ * @author Ankit Sinha
+ */
 public class RegisterRequest {
     private String username;
     private String password;

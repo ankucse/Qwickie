@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * @author Ankit Sinha
+ */
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -35,16 +38,17 @@ public class OrderService {
         this.sseService = sseService;
     }
 
+    /**
+     * Core logic to create and save a new order entity.
+     * @param request The order details (address, pincode, total)
+     * @param customerUsername The username of the customer placing the order
+     * @return The saved Order entity
+     */
     @Transactional
-    public OrderResponse placeOrder(OrderRequest request, String customerUsername) {
-        // Expanded regex to cover Kolkata (700xxx), Howrah (711xxx), Hooghly (712xxx), 
-        // South 24 Parganas (743xxx, 744xxx), etc.
+    public Order createOrder(OrderRequest request, String customerUsername) {
         if (request.getPincode() == null || !request.getPincode().matches("^(700|711|712|743|744)\\d{3}$")) {
             throw new InvalidPincodeException("Delivery is only available in Kolkata and surrounding areas.");
         }
-        
-        // We relax the strict database verification to support the extended zones automatically
-        // If the regex passes, we consider it deliverable.
 
         User customer = userRepository.findByUsername(customerUsername).orElseThrow();
 
@@ -55,15 +59,7 @@ public class OrderService {
         order.setDeliveryAddress(request.getDeliveryAddress());
         order.setStatus(Order.OrderStatus.ORDER_RECEIVED);
         
-        order = orderRepository.save(order);
-        
-        OrderTrackingHistory history = new OrderTrackingHistory(order, order.getStatus(), "Order Placed");
-        historyRepository.save(history);
-
-        OrderResponse response = new OrderResponse(order);
-        sseService.broadcastToPartners("NEW_ORDER", response);
-
-        return response;
+        return orderRepository.save(order);
     }
 
     public OrderResponse getOrder(Long orderId) {
@@ -84,8 +80,11 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Validates and assigns a rider to an order.
+     */
     @Transactional
-    public OrderResponse acceptOrder(Long orderId, String riderUsername) {
+    public Order assignRider(Long orderId, String riderUsername) {
         Order order = orderRepository.findById(orderId).orElseThrow();
         if (order.getStatus() != Order.OrderStatus.ORDER_RECEIVED) {
             throw new OrderStateException("Order cannot be accepted in its current state.");
@@ -94,17 +93,14 @@ public class OrderService {
         User rider = userRepository.findByUsername(riderUsername).orElseThrow();
         order.setRider(rider);
         order.setStatus(Order.OrderStatus.PARTNER_ACCEPTED);
-        orderRepository.save(order);
-
-        historyRepository.save(new OrderTrackingHistory(order, order.getStatus(), "Accepted by " + riderUsername));
-        sseService.sendOrderStatusUpdate(orderId, order.getStatus().name());
-        sseService.broadcastToPartners("ORDER_ACCEPTED", orderId);
-
-        return new OrderResponse(order);
+        return orderRepository.save(order);
     }
 
+    /**
+     * Updates an order's status, ensuring state constraints.
+     */
     @Transactional
-    public OrderResponse updateStatus(Long orderId, Order.OrderStatus newStatus, String riderUsername) {
+    public Order changeOrderStatus(Long orderId, Order.OrderStatus newStatus, String riderUsername) {
         Order order = orderRepository.findById(orderId).orElseThrow();
         
         if (order.getRider() == null || !order.getRider().getUsername().equals(riderUsername)) {
@@ -120,27 +116,20 @@ public class OrderService {
         }
 
         order.setStatus(newStatus);
-        orderRepository.save(order);
-
-        historyRepository.save(new OrderTrackingHistory(order, order.getStatus(), "Status updated"));
-        sseService.sendOrderStatusUpdate(orderId, order.getStatus().name());
-
-        return new OrderResponse(order);
+        return orderRepository.save(order);
     }
 
+    /**
+     * Marks an order as disputed by the customer.
+     */
     @Transactional
-    public OrderResponse notReceived(Long orderId, String customerUsername) {
+    public Order markAsNotReceived(Long orderId, String customerUsername) {
         Order order = orderRepository.findById(orderId).orElseThrow();
         if (!order.getCustomer().getUsername().equals(customerUsername)) {
             throw new RuntimeException("Not authorized");
         }
 
         order.setStatus(Order.OrderStatus.SUPPORT_ROUTED);
-        orderRepository.save(order);
-
-        historyRepository.save(new OrderTrackingHistory(order, order.getStatus(), "Customer reported not received"));
-        sseService.sendOrderStatusUpdate(orderId, order.getStatus().name());
-
-        return new OrderResponse(order);
+        return orderRepository.save(order);
     }
 }

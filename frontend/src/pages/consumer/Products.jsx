@@ -2,25 +2,55 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+/**
+ * Products Component (Consumer Dashboard)
+ * 
+ * Displays the catalog of available groceries/items.
+ * Handles local state for the shopping cart and category filtering.
+ * 
+ * @author Ankit Sinha
+ */
 export default function Products() {
   const [products, setProducts] = useState([]);
+  
+  // Cart state structure: 
+  // { [productId]: quantity, _data_[productId]: productObject }
+  // We store the raw product object alongside the quantity to easily reconstruct the cart for checkout.
   const [cart, setCart] = useState({});
+  
+  // Tracks the currently selected filter pill
   const [activeCategory, setActiveCategory] = useState('All');
   const navigate = useNavigate();
 
+  // Fetch the product catalog on mount
   useEffect(() => {
     axios.get('http://localhost:8080/api/products').then(res => setProducts(res.data));
   }, []);
 
+  /**
+   * Adds an item to the local cart state.
+   * If the item already exists, increments its quantity.
+   */
   const addToCart = (p) => {
-    setCart(prev => ({ ...prev, [p.id]: (prev[p.id] || 0) + 1, [`_data_${p.id}`]: p }));
+    setCart(prev => ({ 
+      ...prev, 
+      [p.id]: (prev[p.id] || 0) + 1, 
+      [`_data_${p.id}`]: p 
+    }));
   };
 
+  /**
+   * Prepares the cart for checkout by stripping out the metadata keys (_data_*)
+   * and saving the clean array to localStorage for the Checkout component to read.
+   */
   const handleCheckout = () => {
-    const items = Object.keys(cart).filter(k => !k.startsWith('_')).map(id => ({
-      product: cart[`_data_${id}`],
-      quantity: cart[id]
-    }));
+    const items = Object.keys(cart)
+      .filter(k => !k.startsWith('_')) // Filter out our metadata keys
+      .map(id => ({
+        product: cart[`_data_${id}`],
+        quantity: cart[id]
+      }));
+      
     if(items.length > 0) {
       localStorage.setItem('cart', JSON.stringify(items));
       navigate('/consumer/checkout');
@@ -44,6 +74,7 @@ export default function Products() {
         >
           All
         </button>
+        {/* Dynamically extract unique categories from the product list */}
         {Array.from(new Set(products.map(p => p.category))).map(category => (
           <button 
             key={category}
@@ -55,6 +86,7 @@ export default function Products() {
         ))}
       </div>
 
+      {/* Product Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {products.filter(p => activeCategory === 'All' || p.category === activeCategory).map(p => (
           <div key={p.id} className="glass-card overflow-hidden hover-scale flex flex-col">

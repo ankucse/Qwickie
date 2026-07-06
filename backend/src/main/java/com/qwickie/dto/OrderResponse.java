@@ -4,6 +4,9 @@ import com.qwickie.model.Order;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * @author Ankit Sinha
+ */
 public class OrderResponse {
     private Long id;
     private BigDecimal totalAmount;

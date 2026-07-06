@@ -1,5 +1,8 @@
 package com.qwickie.dto;
 
+/**
+ * @author Ankit Sinha
+ */
 public class AuthResponse {
     private String token;
     private String role;

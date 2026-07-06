@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Orders")
+/**
+ * @author Ankit Sinha
+ */
 public class Order {
     
     public enum OrderStatus {

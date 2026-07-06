@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "Delivery_Zones")
+/**
+ * @author Ankit Sinha
+ */
 public class DeliveryZone {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

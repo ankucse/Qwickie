@@ -1,5 +1,8 @@
 package com.qwickie.dto;
 
+/**
+ * @author Ankit Sinha
+ */
 public class AuthRequest {
     private String username;
     private String password;
