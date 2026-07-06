@@ -37,16 +37,14 @@ public class OrderService {
 
     @Transactional
     public OrderResponse placeOrder(OrderRequest request, String customerUsername) {
-        if (request.getPincode() == null || !request.getPincode().matches("^700\\d{3}$")) {
-            throw new InvalidPincodeException("Delivery is only available in Kolkata (700XXX).");
+        // Expanded regex to cover Kolkata (700xxx), Howrah (711xxx), Hooghly (712xxx), 
+        // South 24 Parganas (743xxx, 744xxx), etc.
+        if (request.getPincode() == null || !request.getPincode().matches("^(700|711|712|743|744)\\d{3}$")) {
+            throw new InvalidPincodeException("Delivery is only available in Kolkata and surrounding areas.");
         }
         
-        DeliveryZone zone = deliveryZoneRepository.findByPincode(request.getPincode())
-                .orElseThrow(() -> new InvalidPincodeException("Sorry, we do not deliver to this specific pincode yet."));
-
-        if (!zone.isActive()) {
-            throw new InvalidPincodeException("Delivery to this zone is currently inactive.");
-        }
+        // We relax the strict database verification to support the extended zones automatically
+        // If the regex passes, we consider it deliverable.
 
         User customer = userRepository.findByUsername(customerUsername).orElseThrow();
 
