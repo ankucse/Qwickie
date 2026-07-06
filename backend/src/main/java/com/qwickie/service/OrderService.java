@@ -60,7 +60,10 @@ public class OrderService {
         OrderTrackingHistory history = new OrderTrackingHistory(order, order.getStatus(), "Order Placed");
         historyRepository.save(history);
 
-        return new OrderResponse(order);
+        OrderResponse response = new OrderResponse(order);
+        sseService.broadcastToPartners("NEW_ORDER", response);
+
+        return response;
     }
 
     public OrderResponse getOrder(Long orderId) {
@@ -95,6 +98,7 @@ public class OrderService {
 
         historyRepository.save(new OrderTrackingHistory(order, order.getStatus(), "Accepted by " + riderUsername));
         sseService.sendOrderStatusUpdate(orderId, order.getStatus().name());
+        sseService.broadcastToPartners("ORDER_ACCEPTED", orderId);
 
         return new OrderResponse(order);
     }
