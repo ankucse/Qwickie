@@ -3,8 +3,8 @@ spring:
     name: qwickie
   datasource:
     url: jdbc:mysql://localhost:3306/qwickie_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: your_username
-    password: 'your_password'
+    username: root
+    password: '@246810Alpha'
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     defer-datasource-initialization: true

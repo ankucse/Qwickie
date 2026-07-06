@@ -44,6 +44,11 @@ public class OrderController {
         return sseService.subscribe(id);
     }
 
+    @GetMapping(value = "/available/stream", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamPartnerUpdates() {
+        return sseService.subscribeToPartnerStream();
+    }
+
     @PostMapping("/{id}/not-received")
     public ResponseEntity<OrderResponse> reportNotReceived(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(orderService.notReceived(id, auth.getName()));
