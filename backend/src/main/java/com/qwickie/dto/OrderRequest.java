@@ -2,6 +2,9 @@ package com.qwickie.dto;
 
 import java.math.BigDecimal;
 
+/**
+ * @author Ankit Sinha
+ */
 public class OrderRequest {
     private BigDecimal totalAmount;
     private String pincode;

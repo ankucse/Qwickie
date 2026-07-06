@@ -14,6 +14,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Security Filter that intercepts every incoming HTTP request to validate JWT tokens.
+ * This is the core of the stateless authentication architecture. It ensures that 
+ * only authenticated users can access protected endpoints like placing an order or 
+ * accessing the partner dashboard.
+ *
+ * @author Ankit Sinha
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -25,6 +33,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * The core filter method executed once per HTTP request.
+     * It extracts the JWT token from the request, validates its signature and expiration, 
+     * and sets the user's authentication context in Spring Security if valid.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -33,21 +46,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String jwt = null;
         final String username;
 
+        // 1. Try to extract the token from the standard Authorization header
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             jwt = authHeader.substring(7);
-        } else if (request.getParameter("token") != null) {
+        } 
+        // 2. Fallback: Try to extract the token from query parameters.
+        // This is CRITICAL for Server-Sent Events (EventSource) in the frontend, 
+        // because the browser's native EventSource API does not support custom headers.
+        else if (request.getParameter("token") != null) {
             jwt = request.getParameter("token");
         }
 
+        // If no token is found, pass the request down the chain (it will be blocked by SecurityConfig if it's a protected endpoint)
         if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
+
         try {
+            // Extract the username from the token's payload
             username = jwtService.extractUsername(jwt);
+            
+            // If we have a username and the current security context isn't already authenticated
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+                
+                // Validate that the token isn't expired and belongs to this user
                 if (jwtService.isTokenValid(jwt, userDetails)) {
+                    // Create an authentication token and inject it into the Spring Security Context
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities()
                     );
@@ -56,9 +82,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Invalid token
+            // Invalid, malformed, or expired token. We swallow the exception and let the 
+            // filter chain continue. Spring Security will naturally reject the request 
+            // since the SecurityContext remains unauthenticated.
         }
 
+        // Continue processing the request
         filterChain.doFilter(request, response);
     }
 }

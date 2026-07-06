@@ -15,6 +15,9 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+/**
+ * @author Ankit Sinha
+ */
 public class JwtService {
 
     @Value("${jwt.secret}")

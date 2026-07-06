@@ -2,26 +2,42 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+/**
+ * AvailableOrders Component (Partner Dashboard)
+ * 
+ * This component handles the real-time display of unassigned orders to delivery partners.
+ * It uses Server-Sent Events (SSE) to listen for new orders being placed globally, and 
+ * to instantly disable the "Accept" button if another rider claims an order first.
+ * 
+ * @author Ankit Sinha
+ */
 export default function AvailableOrders() {
   const [orders, setOrders] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // 1. Fetch the initial snapshot of currently available orders on mount
     fetchOrders();
     
+    // 2. Establish a real-time SSE connection to the backend orchestrator
     const token = localStorage.getItem('token');
     const sse = new EventSource(`http://localhost:8080/api/orders/available/stream?token=${token}`);
     
+    // 3. Listen for a completely new order being placed by a customer
     sse.addEventListener("NEW_ORDER", (e) => {
       const newOrder = JSON.parse(e.data);
+      // Prepend the new order to the top of the UI instantly
       setOrders(prev => [newOrder, ...prev]);
     });
 
+    // 4. Listen for another rider accepting an order
     sse.addEventListener("ORDER_ACCEPTED", (e) => {
       const acceptedId = parseInt(e.data);
+      // Find the specific order and mark it so the UI can disable the button
       setOrders(prev => prev.map(o => o.id === acceptedId ? { ...o, acceptedByOther: true } : o));
     });
 
+    // Cleanup the connection when the rider navigates away from this page
     return () => sse.close();
   }, []);
 
@@ -29,6 +45,10 @@ export default function AvailableOrders() {
     axios.get('http://localhost:8080/api/orders/available').then(res => setOrders(res.data));
   };
 
+  /**
+   * Called when the rider clicks the Accept button.
+   * Tells the orchestrator to assign this order to the logged-in rider.
+   */
   const acceptOrder = async (id) => {
     await axios.post(`http://localhost:8080/api/orders/${id}/accept`);
     navigate(`/partner/order/${id}`);
@@ -48,6 +68,8 @@ export default function AvailableOrders() {
                 <p className="text-gray-400 text-sm">Pincode: {o.pincode}</p>
                 <p className="text-gray-400 text-sm">Address: {o.deliveryAddress}</p>
               </div>
+              
+              {/* If the orchestrator broadcasted that this was accepted by someone else, disable the UI */}
               {o.acceptedByOther ? (
                 <button disabled className="bg-gray-700 text-gray-400 font-bold px-6 py-2 rounded cursor-not-allowed">
                   Accepted by another rider

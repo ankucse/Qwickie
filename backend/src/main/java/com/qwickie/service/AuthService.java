@@ -12,6 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+/**
+ * @author Ankit Sinha
+ */
 public class AuthService {
 
     private final UserRepository userRepository;

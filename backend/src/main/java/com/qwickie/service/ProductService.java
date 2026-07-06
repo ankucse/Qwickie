@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+/**
+ * @author Ankit Sinha
+ */
 public class ProductService {
     private final ProductRepository productRepository;
 

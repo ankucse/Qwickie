@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
+/**
+ * @author Ankit Sinha
+ */
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidPincodeException.class)
