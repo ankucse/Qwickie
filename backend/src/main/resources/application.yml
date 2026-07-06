@@ -3,10 +3,11 @@ spring:
     name: qwickie
   datasource:
     url: jdbc:mysql://localhost:3306/qwickie_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: '@246810Alpha'
+    username: your_username
+    password: 'your_password'
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
+    defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
     show-sql: true
@@ -14,6 +15,9 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+  sql:
+    init:
+      mode: always
 
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970

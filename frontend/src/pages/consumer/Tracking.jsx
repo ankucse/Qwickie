@@ -13,7 +13,8 @@ export default function Tracking() {
     axios.get(`http://localhost:8080/api/orders/${id}`).then(res => setOrder(res.data));
 
     // Listen to SSE
-    const sse = new EventSource(`http://localhost:8080/api/orders/${id}/stream`);
+    const token = localStorage.getItem('token');
+    const sse = new EventSource(`http://localhost:8080/api/orders/${id}/stream?token=${token}`);
     sse.addEventListener("status-update", (e) => {
       setOrder(prev => prev ? { ...prev, status: e.data } : null);
     });

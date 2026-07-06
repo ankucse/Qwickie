@@ -64,6 +64,15 @@ export default function Checkout() {
               <label className="block text-gray-400 text-sm mb-1">Delivery Address</label>
               <textarea className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-primary outline-none min-h-[100px]" value={address} onChange={e => setAddress(e.target.value)} required></textarea>
             </div>
+            
+            <div className="mt-2">
+              <label className="block text-gray-400 text-sm mb-2">Payment Method</label>
+              <div className="flex items-center gap-2 bg-dark/50 p-4 border border-primary/50 rounded-lg">
+                <input type="radio" id="cod" name="paymentMethod" value="COD" defaultChecked className="accent-primary w-4 h-4" />
+                <label htmlFor="cod" className="text-white font-medium cursor-pointer">Cash on Delivery (COD)</label>
+              </div>
+            </div>
+
             <button type="submit" className="btn-primary mt-4">Place Order - ₹{totalAmount.toFixed(2)}</button>
           </form>
         </>

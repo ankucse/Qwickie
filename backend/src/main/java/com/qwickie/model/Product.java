@@ -25,6 +25,9 @@ public class Product {
     @Column(nullable = false)
     private Integer stock = 0;
 
+    @Column(nullable = false)
+    private String category = "Groceries";
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -42,4 +45,7 @@ public class Product {
 
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 }
